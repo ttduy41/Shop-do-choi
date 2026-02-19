@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VINHMODLAG V61 - FINAL MASTER</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --accent: #00a884; --bg: #f0f2f5; --card: #ffffff; --text: #1c1e21; --border: #e4e6eb; --header: #ffffff; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); margin: 0; overflow-x: hidden; }
+        
+        /* AUTH SCREEN */
+        #authScreen { position: fixed; inset: 0; background: var(--accent); z-index: 9999; display: flex; align-items: center; justify-content: center; }
+        .auth-box { background: var(--card); padding: 35px; border-radius: 25px; width: 380px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.2); }
+        .auth-tabs { display: flex; margin-bottom: 20px; background: #f0f2f5; border-radius: 12px; padding: 5px; }
+        .auth-tab { flex: 1; padding: 10px; cursor: pointer; border-radius: 8px; font-weight: bold; transition: 0.3s; color: #666; }
+        .auth-tab.active { background: white; color: var(--accent); box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+
+        /* HEADER */
+        header { position: fixed; top:0; width:100%; height:75px; background: var(--header); display:flex; align-items:center; padding:0 25px; box-shadow:0 2px 15px rgba(0,0,0,0.1); z-index:1000; box-sizing:border-box; }
+        .logo { font-weight:900; font-size: 26px; color:var(--accent); cursor: pointer; }
+        .wallet { background:#1a1a1a; color:#00ff88; padding:8px 18px; border-radius:30px; font-weight:bold; margin-left:auto; border: 2px solid var(--accent); font-family: monospace; }
+
+        /* MAIN CONTAINER */
+        .container { margin-top:100px; padding:20px; max-width:1100px; margin-inline:auto; }
+        .intro-box { background: linear-gradient(135deg, #00a884 0%, #007d63 100%); color: white; padding: 25px; border-radius: 20px; margin-bottom: 25px; }
+        .shop-grid { display:grid; grid-template-columns:repeat(auto-fit, minmax(320px, 1fr)); gap:20px; }
+        .product-card { background: var(--card); padding:20px; border-radius:20px; border:1px solid var(--border); text-align:center; transition: 0.3s; }
+        .stock-badge { font-size: 11px; background: #f0f2f5; padding: 10px; border-radius: 12px; text-align: left; margin-bottom: 15px; border-left: 3px solid var(--accent); line-height: 1.5; }
+
+        input, select, button, textarea { width:100%; padding:13px; margin:8px 0; border-radius:10px; border:1px solid var(--border); box-sizing: border-box; outline: none; font-family: inherit; }
+        .btn-buy { background:var(--accent); color:#fff; border:none; font-weight:bold; cursor:pointer; text-transform:uppercase; transition: 0.2s; }
+        
+        /* SIDE MENU */
+        #sideMenu { position:fixed; top:0; left:-450px; width:380px; height:100%; background: var(--card); z-index:2000; padding:25px; transition:0.4s; box-shadow:15px 0 40px rgba(0,0,0,0.3); overflow-y:auto; box-sizing:border-box; }
+        
+        /* ROBOT CONSOLE */
+        #robotConsole { background: #000; color: #0f8; padding: 15px; border-radius: 15px; font-family: monospace; margin-top: 15px; border: 1px solid #333; }
+        #robotLogs { height: 180px; overflow-y: auto; font-size: 10px; border-bottom: 1px solid #222; margin-bottom: 10px; white-space: pre-wrap; line-height: 1.4; text-align: left; color: #0f8; }
+
+        /* MODALS */
+        .modal { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); z-index:5000; align-items:center; justify-content:center; backdrop-filter: blur(5px); }
+        .modal-content { background: var(--card); padding:30px; border-radius:25px; width:450px; border:2px solid var(--accent); text-align:center; }
+        
+        /* SUCCESS PANEL */
+        .trans-panel { background: #1a1a1a; color: #fff; padding: 25px; border-radius: 20px; border: 2px solid #0f8; }
+        .key-box { background: #333; padding: 15px; border-radius: 10px; color: #0f8; font-weight: bold; font-family: monospace; margin: 15px 0; word-break: break-all; border: 1px solid #444; }
+        
+        #overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:1500; }
+        .hist-item { background: #f8f9fa; padding: 12px; border-radius: 12px; margin-bottom: 8px; border-left: 5px solid var(--accent); text-align: left; font-size: 13px; }
+    </style>
+</head>
+<body>
+
+    <div id="authScreen">
+        <div class="auth-box">
+            <h1 style="color:var(--accent); font-weight:900; margin-bottom:20px;">VINHMODLAG</h1>
+            <div class="auth-tabs">
+                <div class="auth-tab active" id="tabLogin" onclick="switchAuth('login')">Đăng nhập</div>
+                <div class="auth-tab" id="tabReg" onclick="switchAuth('reg')">Đăng ký</div>
+            </div>
+            <div id="formLogin">
+                <input type="text" id="uLog" placeholder="Tên tài khoản...">
+                <input type="password" id="pLog" placeholder="Mật khẩu...">
+                <button class="btn-buy" onclick="handleLogin()">VÀO HỆ THỐNG</button>
+            </div>
+            <div id="formReg" style="display:none;">
+                <input type="text" id="uReg" placeholder="Tên tài khoản mới...">
+                <input type="password" id="pReg" placeholder="Mật khẩu...">
+                <input type="password" id="pRegConfirm" placeholder="Xác nhận mật khẩu...">
+                <button class="btn-buy" style="background:#333;" onclick="handleRegister()">TẠO TÀI KHOẢN</button>
+            </div>
+            <p style="font-size:11px; color:#888; margin-top:15px;">Admin: <b>Hoàng Vinh</b> | Zalo: 0364684151</p>
+        </div>
+    </div>
+
+    <div id="app" style="display:none">
+        <header>
+            <div onclick="toggleMenu(true)" style="font-size:25px; cursor:pointer; color: var(--accent);">☰</div>
+            <div class="logo" style="margin-left:15px;">VINHMODLAG</div>
+            <div class="wallet"><span id="userBal">0</span>đ</div>
+        </header>
+
+        <div id="sideMenu">
+            <h2 style="margin-top:0">Sếp: <span id="uNameDisp" style="color:var(--accent)"></span></h2>
+            <button class="btn-buy" style="background:#333; font-size:12px;" onclick="openModal('modalHistory')">📊 LỊCH SỬ MUA HÀNG</button>
+            <hr style="border:0; border-top:1px solid var(--border); margin:20px 0;">
+            
+            <p style="font-size: 11px; font-weight:bold;">NẠP TIỀN:</p>
+            <select id="payMode" onchange="switchPay(this.value)">
+                <option value="bank">Ngân Hàng (Quét QR)</option>
+                <option value="the">Thẻ Cào</option>
+            </select>
+
+            <div id="payBank" style="text-align:center; margin-top:10px;">
+                <input type="number" id="bankAmt" placeholder="Nhập số tiền...">
+                <button class="btn-buy" style="background:#0066ff" onclick="genQR()">TẠO QR BANK</button>
+                <div id="qrBox" style="display:none; margin-top:10px;">
+                    <img id="qrImg" style="width:100%; border-radius:10px; border: 1px solid #ddd;">
+                    <p id="qrMsg" style="font-size:11px; font-weight:bold; color:red; margin-top:5px;"></p>
+                </div>
+            </div>
+
+            <div id="payThe" style="display:none;">
+                <input id="cardPin" placeholder="Mã thẻ (PIN)...">
+                <button class="btn-buy" onclick="alert('Vui lòng sử dụng Bank QR hoặc nhắn Admin!')">GỬI THẺ</button>
+            </div>
+
+            <div id="adminArea" style="display:none;">
+                <div id="robotConsole">
+                    <b>🖥️ ROBOT VINHMOD (Gõ .help)</b>
+                    <div id="robotLogs">Hệ thống sẵn sàng...</div>
+                    <input id="robotInput" placeholder="Lệnh admin...">
+                    <button onclick="runRobotCmd()" style="background:#0f8; color:#000; font-weight:bold;">THỰC THI</button>
+                    <button onclick="openModal('modalKey')" style="background:#444; color:#fff; font-size:10px; margin-top:5px;">📦 NẠP KHO</button>
+                </div>
+            </div>
+            <button onclick="logout()" style="color:red; background:none; border:1px solid red; margin-top:30px;">ĐĂNG XUẤT</button>
+        </div>
+
+        <div class="container">
+            <div class="intro-box">
+                <h3 style="margin:0">💎 VINHMODLAG AUTOMATIC</h3>
+                <p style="font-size:13px;">Hệ thống tự động 100% | Admin: 0364684151</p>
+            </div>
+            <div class="shop-grid" id="shopGrid"></div>
+        </div>
+    </div>
+
+    <div id="modalHistory" class="modal"><div class="modal-content" style="width:90%; max-width:500px;">
+        <h3>📊 LỊCH SỬ CỦA BẠN</h3>
+        <div id="historyDisplay" style="max-height: 400px; overflow-y: auto;"></div>
+        <button class="btn-buy" style="background:#333; margin-top:15px;" onclick="closeModal('modalHistory')">ĐÓNG</button>
+    </div></div>
+
+    <div id="modalSuccess" class="modal"><div class="modal-content trans-panel">
+        <h2 style="color:#0f8; margin:0;">MUA THÀNH CÔNG! ✅</h2>
+        <p id="succName" style="margin:10px 0; font-size:14px; color:#ccc;"></p>
+        <div class="key-box" id="succKey">CHƯA CÓ MÃ</div>
+        <button class="btn-buy" style="background:#0f8; color:#000;" onclick="copyKey()">SAO CHÉP MÃ</button>
+        <button onclick="closeModal('modalSuccess')" style="background:none; border:none; color:#777; margin-top:15px; cursor:pointer;">ĐÓNG</button>
+    </div></div>
+
+    <div id="modalKey" class="modal"><div class="modal-content">
+        <h3>📦 NHẬP KHO PHÂN LOẠI</h3>
+        <select id="kProd"><option value="itachi">Itachi Ping V3</option><option value="hopper">Hopper Plus</option><option value="clone">Acc Clone Lv5</option></select>
+        <select id="kTime"><option>1 Ngày</option><option>7 Ngày</option><option>30 Ngày</option><option>Vĩnh Viễn</option><option>Mặc định</option></select>
+        <textarea id="kInput" rows="5" placeholder="Mỗi dòng 1 mã..."></textarea>
+        <button class="btn-buy" onclick="adminAddStock()">XÁC NHẬN NẠP</button>
+        <button onclick="closeModal('modalKey')">HỦY</button>
+    </div></div>
+
+    <div id="overlay" onclick="toggleMenu(false)"></div>
+
+    <script>
+        const STORAGE_KEY = 'VINHMOD_V61_FINAL';
+        const SESSION_KEY = 'VINHMOD_V61_USER';
+
+        let db = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {
+            users: { "vinhmoddz": { pass: "vinhmoddz", bal: 10000000, admin: true, buys: [] } },
+            napHistory: [],
+            prods: [
+                { id: 0, slug: "itachi", name: "Itachi Ping V3", plans: { "1 Ngày": 10000, "7 Ngày": 50000, "30 Ngày": 150000, "Vĩnh Viễn": 500000 }, stock: { "1 Ngày": [], "7 Ngày": [], "30 Ngày": [], "Vĩnh Viễn": [] } },
+                { id: 1, slug: "hopper", name: "Hopper Plus", plans: { "1 Ngày": 15000, "7 Ngày": 70000, "30 Ngày": 200000, "Vĩnh Viễn": 700000 }, stock: { "1 Ngày": [], "7 Ngày": [], "30 Ngày": [], "Vĩnh Viễn": [] } },
+                { id: 2, slug: "clone", name: "Acc Clone Level 5", plans: { "Mặc định": 20000 }, stock: { "Mặc định": [] } }
+            ]
+        };
+
+        let curUser = localStorage.getItem(SESSION_KEY) || null;
+        function save() { 
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(db)); 
+            if(curUser) renderShop(); 
+        }
+
+        // --- AUTH ---
+        function switchAuth(m) {
+            document.getElementById('formLogin').style.display = m==='login'?'block':'none';
+            document.getElementById('formReg').style.display = m==='reg'?'block':'none';
+            document.getElementById('tabLogin').className = `auth-tab ${m==='login'?'active':''}`;
+            document.getElementById('tabReg').className = `auth-tab ${m==='reg'?'active':''}`;
+        }
+        function handleRegister() {
+            let u = document.getElementById('uReg').value.trim(), p = document.getElementById('pReg').value, pc = document.getElementById('pRegConfirm').value;
+            if(!u || p.length < 3 || p!==pc) return alert("Dữ liệu không hợp lệ!");
+            if(db.users[u]) return alert("Tài khoản đã tồn tại!");
+            db.users[u] = { pass: p, bal: 0, admin: false, buys: [] };
+            save(); alert("Đăng ký thành công!"); switchAuth('login');
+        }
+        function handleLogin() {
+            let u = document.getElementById('uLog').value.trim(), p = document.getElementById('pLog').value;
+            if(db.users[u] && db.users[u].pass === p) { curUser = u; localStorage.setItem(SESSION_KEY, u); initApp(); }
+            else alert("Sai tài khoản hoặc mật khẩu!");
+        }
+        function initApp() {
+            document.getElementById('authScreen').style.display='none';
+            document.getElementById('app').style.display='block';
+            document.getElementById('uNameDisp').innerText = curUser;
+            document.getElementById('adminArea').style.display = db.users[curUser].admin ? 'block' : 'none';
+            renderShop();
+        }
+
+        // --- SHOP & TRANS ---
+        function renderShop() {
+            document.getElementById('userBal').innerText = db.users[curUser].bal.toLocaleString();
+            let grid = document.getElementById('shopGrid'); grid.innerHTML = "";
+            db.prods.forEach(p => {
+                let sTxt = Object.keys(p.stock).map(k => `<b>${k}:</b> ${p.stock[k].length}`).join(' | ');
+                grid.innerHTML += `<div class="product-card">
+                    <div class="stock-badge">${sTxt}</div>
+                    <h2>${p.name}</h2>
+                    <select id="plan-${p.id}">${Object.keys(p.plans).map(k=>`<option value="${k}">${k} - ${p.plans[k].toLocaleString()}đ</option>`).join('')}</select>
+                    <button class="btn-buy" onclick="buyProcess(${p.id})">MUA NGAY</button>
+                </div>`;
+            });
+        }
+        function buyProcess(id) {
+            let p = db.prods[id], plan = document.getElementById(`plan-${id}`).value, cost = p.plans[plan];
+            if(db.users[curUser].bal < cost) return alert("Không đủ tiền sếp ơi!");
+            if(p.stock[plan].length === 0) return alert("Sản phẩm này hiện đang hết hàng!");
+            
+            let key = p.stock[plan].shift();
+            db.users[curUser].bal -= cost;
+            db.users[curUser].buys.unshift({ name: p.name, plan: plan, key: key, time: new Date().toLocaleString() });
+            save();
+            
+            document.getElementById('succName').innerText = `${p.name} (${plan})`;
+            document.getElementById('succKey').innerText = key;
+            openModal('modalSuccess');
+        }
+        function copyKey() {
+            navigator.clipboard.writeText(document.getElementById('succKey').innerText).then(() => alert("Đã sao chép!"));
+        }
+
+        // --- ROBOT V61 MASTER ---
+        function runRobotCmd() {
+            let cmd = document.getElementById('robotInput').value.trim(), p = cmd.split(" "), log = document.getElementById('robotLogs');
+            if(cmd === ".help") {
+                log.innerHTML += `\n--- 🖥️ LỆNH ADMIN VINHMOD ---
+1. .duyet [tên] [số] duyet (Cộng tiền khách)
+2. .xem [tên] (Xem pass & số dư khách)
+3. .lichsunap (Xem toàn bộ lịch sử nạp)
+4. .trutien [tên] [số] tru (Trừ tiền khách)
+---------------------------`;
+            } 
+            else if(p[0] === ".duyet" && p[3] === "duyet") {
+                let u = p[1], v = parseInt(p[2]);
+                if(db.users[u]) {
+                    db.users[u].bal += v;
+                    db.napHistory.unshift({ u: u, v: v, t: new Date().toLocaleString() });
+                    log.innerHTML += `\n✅ Đã nạp ${v}đ cho [${u}] thành công!`;
+                    save();
+                } else log.innerHTML += `\n❌ Không tìm thấy user: ${u}`;
+            }
+            else if(p[0] === ".xem") {
+                let u = p[1];
+                if(db.users[u]) {
+                    log.innerHTML += `\n👤 USER: ${u}\n🔑 PASS: ${db.users[u].pass}\n💰 BAL: ${db.users[u].bal.toLocaleString()}đ`;
+                } else log.innerHTML += `\n❌ User [${u}] không tồn tại!`;
+            }
+            else if(p[0] === ".lichsunap") {
+                let txt = "\n--- 📜 LỊCH SỬ NẠP HỆ THỐNG ---";
+                db.napHistory.slice(0, 15).forEach(h => txt += `\n+ ${h.t}: ${h.u} +${h.v.toLocaleString()}đ`);
+                log.innerHTML += txt || "\n📭 Chưa có dữ liệu nạp tiền!";
+            }
+            else if(p[0] === ".trutien" && p[3] === "tru") {
+                let u = p[1], v = parseInt(p[2]);
+                if(db.users[u]) { db.users[u].bal -= v; log.innerHTML += `\n✅ Đã trừ ${v}đ của [${u}]`; save(); }
+            }
+            else { log.innerHTML += "\n❌ Lệnh không hợp lệ, gõ .help"; }
+            log.scrollTop = log.scrollHeight; document.getElementById('robotInput').value = "";
+        }
+
+        // --- UTILS ---
+        function switchPay(v) {
+            document.getElementById('payThe').style.display = v==='the'?'block':'none';
+            document.getElementById('payBank').style.display = v==='bank'?'block':'none';
+        }
+        function genQR() {
+            let amt = document.getElementById('bankAmt').value;
+            if(amt < 1000) return alert("Nạp tối thiểu 1.000đ!");
+            let msg = "NAP " + curUser.toUpperCase();
+            document.getElementById('qrImg').src = `https://img.vietqr.io/image/MB-0364684151-compact2.jpg?amount=${amt}&addInfo=${msg}`;
+            document.getElementById('qrMsg').innerText = "NỘI DUNG: " + msg;
+            document.getElementById('qrBox').style.display = 'block';
+        }
+        function adminAddStock() {
+            let slug = document.getElementById('kProd').value, time = document.getElementById('kTime').value, raw = document.getElementById('kInput').value.trim();
+            let pr = db.prods.find(x => x.slug === slug);
+            if(raw && pr.stock[time]) {
+                pr.stock[time].push(...raw.split('\n').filter(k => k.trim() !== ""));
+                save(); closeModal('modalKey'); alert("Nạp kho thành công!");
+                document.getElementById('kInput').value = "";
+            }
+        }
+        function toggleMenu(s) { document.getElementById('sideMenu').style.left = s?'0':'-450px'; document.getElementById('overlay').style.display = s?'block':'none'; }
+        function openModal(id) { 
+            document.getElementById(id).style.display = 'flex'; 
+            if(id === 'modalHistory') {
+                let d = document.getElementById('historyDisplay'); d.innerHTML = "";
+                db.users[curUser].buys.forEach(b => d.innerHTML += `<div class="hist-item"><b>${b.name}</b> (${b.plan})<br><span style="color:red; font-weight:bold;">KEY: ${b.key}</span><br><small>${b.time}</small></div>`);
+            }
+        }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+        function logout() { localStorage.removeItem(SESSION_KEY); location.reload(); }
+        if(curUser) initApp();
+    </script>
+</body>
+</html>
